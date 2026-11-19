@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Batalha das Bases</title>
+  <!-- CSS: visual e adaptação para telas menores -->
+  <style>
+    :root { color-scheme: light; --ink: #17314a; --sky: #dff1fc; --paper: #fffdf7; --a: #d45242; --b: #178779; --gold: #ffd166; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--sky); color: var(--ink); font-family: "Trebuchet MS", Verdana, sans-serif; font-size: 18px; }
+    body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 14% 17%, #fff 0 3%, transparent 3.2%), radial-gradient(circle at 80% 10%, #fff 0 4%, transparent 4.2%), linear-gradient(transparent 82%, #9fd8a4 82%); pointer-events: none; }
+    main { width: min(100% - 28px, 940px); margin: 0 auto; padding: 22px 0 42px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(2.2rem, 7vw, 4.2rem); line-height: 1.03; letter-spacing: -.045em; text-align: center; text-shadow: 3px 3px 0 #fff; }
+    .subtitle { text-align: center; font-weight: 700; margin: 12px 0 24px; }
+    h2 { font-size: clamp(1.45rem, 4vw, 2rem); }
+    h3 { font-size: 1.28rem; }
+    .panel { background: var(--paper); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 6px 7px 0 var(--ink); padding: clamp(16px, 4vw, 28px); }
+    .setup-grid, .bases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .team-form { padding: 16px; border-radius: 16px; background: #fff0ea; border: 2px solid var(--a); }
+    .team-form.team-b { background: #e6f8f3; border-color: var(--b); }
+    label { display: block; font-weight: 700; margin: 13px 0 6px; }
+    input { width: 100%; min-height: 52px; border: 2px solid #8195a3; border-radius: 11px; padding: 9px 12px; background: #fff; color: var(--ink); font: inherit; }
+    input:focus-visible, button:focus-visible { outline: 4px solid #305eca; outline-offset: 3px; }
+    button { min-height: 56px; border: 3px solid var(--ink); border-radius: 13px; padding: 10px 20px; background: var(--gold); color: var(--ink); font: 800 1.1rem "Trebuchet MS", Verdana, sans-serif; cursor: pointer; box-shadow: 3px 4px 0 var(--ink); touch-action: manipulation; }
+    button:active { transform: translate(2px, 2px); box-shadow: 1px 2px 0 var(--ink); }
+    button:disabled { opacity: .55; cursor: default; }
+    .primary { display: block; width: min(100%, 330px); margin: 26px auto 0; background: var(--gold); }
+    [hidden] { display: none !important; }
+    .bases { margin-bottom: 18px; }
+    .base { min-width: 0; text-align: center; background: #fff0ea; border-color: var(--a); }
+    .base.team-b { background: #e6f8f3; border-color: var(--b); }
+    .castle { font-size: clamp(2.5rem, 8vw, 4.4rem); line-height: 1; margin: 4px 0 10px; }
+    .base h2 { overflow-wrap: anywhere; }
+    .health { font-size: 1.4rem; font-weight: 900; margin: 12px 0 8px; }
+    .bar { height: 24px; overflow: hidden; background: #fff; border: 2px solid var(--ink); border-radius: 20px; }
+    .fill { height: 100%; width: 100%; background: var(--a); transition: width .3s ease; }
+    .team-b .fill { background: var(--b); }
+    .turn { text-align: center; font-size: clamp(1.2rem, 4vw, 1.65rem); font-weight: 900; margin-bottom: 18px; overflow-wrap: anywhere; }
+    .arena { text-align: center; }
+    .arena h2 { margin-bottom: 16px; }
+    .choices { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+    .choices button { min-width: min(100%, 190px); }
+    .attack { background: #ffc4b2; }
+    .defend { background: #b4ecdd; }
+    .difficulty-info { margin-bottom: 18px; line-height: 1.4; }
+    .question { font-size: clamp(2rem, 7vw, 3.25rem); font-weight: 900; margin: 12px 0 18px; }
+    .answer-row { display: flex; align-items: end; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .answer-row label { margin: 0; text-align: left; }
+    .answer-row input { max-width: 210px; font-size: 1.4rem; }
+    .timer { display: inline-block; min-width: 125px; margin: 0 0 16px; padding: 8px 15px; border-radius: 12px; background: var(--gold); font-size: 1.4rem; font-weight: 900; }
+    .timer.urgent { background: #ffc4b2; }
+    .feedback { min-height: 1.5em; margin-top: 18px; font-size: 1.25rem; font-weight: 900; }
+    .feedback.wrong { color: #a62e26; }
+    .feedback.correct { color: #126e55; }
+    .victory { text-align: center; padding: 48px 20px; }
+    .victory .castle { font-size: 5rem; }
+    .victory h2 { margin-bottom: 14px; overflow-wrap: anywhere; }
+    .hit { animation: hit .45s ease-in-out; }
+    .healed { animation: healed .5s ease-in-out; }
+    @keyframes hit { 25% { transform: translateX(-7px); filter: brightness(1.3); } 50% { transform: translateX(7px); } 75% { transform: translateX(-4px); } }
+    @keyframes healed { 50% { filter: brightness(1.35); transform: scale(1.03); } }
+    @media (max-width: 620px) { .setup-grid { grid-template-columns: 1fr; } .bases { gap: 9px; } .base { padding: 12px 8px; box-shadow: 3px 4px 0 var(--ink); } .base h2 { font-size: 1.15rem; } .health { font-size: 1.05rem; } .castle { margin-bottom: 5px; } .bar { height: 18px; } .choices button { flex: 1 1 100%; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <!-- HTML: configuração, partida e vitória -->
+  <main>
+    <h1>🏰 Batalha das Bases</h1>
+    <p class="subtitle">Resolva contas para atacar ou proteger sua fortaleza!</p>
+
+    <section id="setup" class="panel" aria-labelledby="setup-title">
+      <h2 id="setup-title">Prepare as equipes</h2>
+      <div class="setup-grid">
+        <div class="team-form">
+          <label for="team-a">Nome da Equipe A</label><input id="team-a" maxlength="28" value="Equipe A">
+          <label for="a1">Jogador 1</label><input id="a1" maxlength="28" value="Jogador A1">
+          <label for="a2">Jogador 2</label><input id="a2" maxlength="28" value="Jogador A2">
+          <label for="a3">Jogador 3</label><input id="a3" maxlength="28" value="Jogador A3">
+        </div>
+        <div class="team-form team-b">
+          <label for="team-b">Nome da Equipe B</label><input id="team-b" maxlength="28" value="Equipe B">
+          <label for="b1">Jogador 1</label><input id="b1" maxlength="28" value="Jogador B1">
+          <label for="b2">Jogador 2</label><input id="b2" maxlength="28" value="Jogador B2">
+          <label for="b3">Jogador 3</label><input id="b3" maxlength="28" value="Jogador B3">
+        </div>
+      </div>
+      <button id="start" class="primary" type="button">Começar</button>
+    </section>
+
+    <section id="game" hidden aria-label="Partida">
+      <div class="bases">
+        <article id="base-a" class="base panel"><div class="castle" aria-hidden="true">🏰</div><h2 id="name-a"></h2><p class="health" id="health-a"></p><div class="bar" role="progressbar" aria-label="Vida da Equipe A" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="fill" id="fill-a"></div></div></article>
+        <article id="base-b" class="base panel team-b"><div class="castle" aria-hidden="true">🏯</div><h2 id="name-b"></h2><p class="health" id="health-b"></p><div class="bar" role="progressbar" aria-label="Vida da Equipe B" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="fill" id="fill-b"></div></div></article>
+      </div>
+      <p id="turn" class="turn" aria-live="polite"></p>
+      <div class="panel arena">
+        <div id="action-step"><h2>O que você vai fazer?</h2><div class="choices"><button id="attack" class="attack" type="button">⚔️ Atacar</button><button id="defend" class="defend" type="button">🛡️ Defender</button></div></div>
+        <div id="level-step" hidden><h2>Escolha a dificuldade</h2><p class="difficulty-info">Quanto mais difícil, maior o dano ou a cura.</p><div class="choices"><button type="button" data-level="easy">Fácil · 10</button><button type="button" data-level="medium">Médio · 20</button><button type="button" data-level="hard">Difícil · 30</button></div></div>
+        <div id="question-step" hidden><p id="timer" class="timer" aria-live="off">25 s</p><h2>Resolva a conta</h2><p id="question" class="question"></p><form id="answer-form"><div class="answer-row"><div><label for="answer">Sua resposta</label><input id="answer" type="number" inputmode="numeric" step="1" min="0" required autocomplete="off"></div><button type="submit">Responder</button></div></form></div>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="victory" class="panel victory" hidden aria-labelledby="victory-title"><div class="castle" aria-hidden="true">🏆</div><h2 id="victory-title"></h2><button id="again" class="primary" type="button">Jogar novamente</button></section>
+  </main>
+
+  <!-- JS: perguntas, turnos e regras da partida -->
+  <script>
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const effects = { easy: 10, medium: 20, hard: 30 };
+    let teams = [];
+    let turnIndex = 0;
+    let action = null;
+    let level = null;
+    let currentQuestion = null;
+    let phase = 'setup';
+    let timerId = null;
+    let feedbackId = null;
+    let deadline = 0;
+
+    function generateQuestion(difficulty) {
+      if (difficulty === 'easy') {
+        if (random(0, 1) === 0) {
+          const a = random(0, 50), b = random(0, 50 - a);
+          return { text: `${a} + ${b} = ?`, answer: a + b };
+        }
+        const a = random(0, 50), b = random(0, a);
+        return { text: `${a} − ${b} = ?`, answer: a - b };
+      }
+      if (difficulty === 'medium') {
+        const a = random(1, 10), b = random(1, 10);
+        return random(0, 1) === 0
+          ? { text: `${a} × ${b} = ?`, answer: a * b }
+          : { text: `${a * b} ÷ ${b} = ?`, answer: a };
+      }
+      if (random(0, 1) === 0) {
+        const a = random(1, 20), b = random(1, 5), c = random(1, 6);
+        return { text: `${a} + ${b} × ${c} = ?`, answer: a + b * c };
+      }
+      const x = random(1, 30), n = random(1, 20);
+      return { text: `x + ${n} = ${x + n}. Quanto vale x?`, answer: x };
+    }
+
+    function showStep(step) {
+      $('action-step').hidden = step !== 'action';
+      $('level-step').hidden = step !== 'level';
+      $('question-step').hidden = step !== 'question';
+    }
+
+    function updateBases() {
+      for (let i = 0; i < 2; i++) {
+        const key = i === 0 ? 'a' : 'b';
+        $('name-' + key).textContent = teams[i].name;
+        $('health-' + key).textContent = `${teams[i].health} / 100 de vida`;
+        $('fill-' + key).style.width = teams[i].health + '%';
+        const bar = $('base-' + key).querySelector('[role="progressbar"]');
+        bar.setAttribute('aria-label', `Vida de ${teams[i].name}`);
+        bar.setAttribute('aria-valuenow', teams[i].health);
+      }
+    }
+
+    function updateTurn() {
+      const i = turnIndex % 2;
+      const player = teams[i].players[Math.floor(turnIndex / 2) % 3];
+      $('turn').textContent = `Vez de ${player} · ${teams[i].name}`;
+    }
+
+    function startTurn() {
+      phase = 'action';
+      action = null;
+      level = null;
+      currentQuestion = null;
+      $('feedback').textContent = '';
+      $('feedback').className = 'feedback';
+      updateTurn();
+      showStep('action');
+    }
+
+    function clearClocks() {
+      clearInterval(timerId);
+      clearTimeout(feedbackId);
+      timerId = null;
+      feedbackId = null;
+    }
+
+    function startGame() {
+      clearClocks();
+      teams = ['a', 'b'].map((key) => ({
+        name: $('team-' + key).value.trim() || (key === 'a' ? 'Equipe A' : 'Equipe B'),
+        players: [1, 2, 3].map((n) => $(key + n).value.trim() || `Jogador ${key.toUpperCase()}${n}`),
+        health: 100
+      }));
+      turnIndex = 0;
+      $('setup').hidden = true;
+      $('victory').hidden = true;
+      $('game').hidden = false;
+      updateBases();
+      startTurn();
+    }
+
+    function chooseAction(selected) {
+      if (phase !== 'action') return;
+      action = selected;
+      phase = 'level';
+      showStep('level');
+    }
+
+    function tick() {
+      if (phase !== 'question') return;
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      $('timer').textContent = `${remaining} s`;
+      $('timer').classList.toggle('urgent', remaining <= 5);
+      if (Date.now() >= deadline) finishAnswer(false, true);
+    }
+
+    function chooseLevel(selected) {
+      if (phase !== 'level' || !Object.hasOwn(effects, selected)) return;
+      level = selected;
+      currentQuestion = generateQuestion(level);
+      $('question').textContent = currentQuestion.text;
+      $('answer').value = '';
+      $('answer').disabled = false;
+      $('answer-form').querySelector('button').disabled = false;
+      $('timer').classList.remove('urgent');
+      phase = 'question';
+      showStep('question');
+      deadline = Date.now() + 25000;
+      tick();
+      timerId = setInterval(tick, 100);
+      $('answer').focus();
+    }
+
+    function finishAnswer(correct, timeout) {
+      if (phase !== 'question') return;
+      phase = 'feedback';
+      clearInterval(timerId);
+      timerId = null;
+      $('answer').disabled = true;
+      $('answer-form').querySelector('button').disabled = true;
+      showStep('question');
+      const message = $('feedback');
+      message.className = 'feedback ' + (correct ? 'correct' : 'wrong');
+      if (correct) {
+        const target = action === 'attack' ? (turnIndex % 2 + 1) % 2 : turnIndex % 2;
+        teams[target].health = Math.max(0, Math.min(100, teams[target].health + (action === 'attack' ? -effects[level] : effects[level])));
+        updateBases();
+        const base = $('base-' + (target === 0 ? 'a' : 'b'));
+        const animation = action === 'attack' ? 'hit' : 'healed';
+        base.classList.remove('hit', 'healed');
+        void base.offsetWidth;
+        base.classList.add(animation);
+        message.textContent = action === 'attack' ? `Acertou! ${effects[level]} de dano!` : `Acertou! ${effects[level]} de cura!`;
+      } else {
+        message.textContent = `${timeout ? 'Tempo esgotado!' : 'Resposta errada!'} A resposta certa é ${currentQuestion.answer}.`;
+      }
+      feedbackId = setTimeout(() => {
+        feedbackId = null;
+        if (teams.some((team) => team.health === 0)) {
+          phase = 'victory';
+          const winner = teams.find((team) => team.health > 0);
+          $('victory-title').textContent = `${winner.name} venceu!`;
+          $('game').hidden = true;
+          $('victory').hidden = false;
+        } else {
+          turnIndex++;
+          startTurn();
+        }
+      }, 2000);
+    }
+
+    $('start').addEventListener('click', startGame);
+    $('attack').addEventListener('click', () => chooseAction('attack'));
+    $('defend').addEventListener('click', () => chooseAction('defend'));
+    document.querySelectorAll('[data-level]').forEach((button) => button.addEventListener('click', () => chooseLevel(button.dataset.level)));
+    $('answer-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (phase !== 'question') return;
+      if (Date.now() >= deadline) { finishAnswer(false, true); return; }
+      const value = $('answer').value.trim();
+      finishAnswer(value !== '' && Number.isInteger(Number(value)) && Number(value) === currentQuestion.answer, false);
+    });
+    $('again').addEventListener('click', () => {
+      clearClocks();
+      phase = 'setup';
+      $('victory').hidden = true;
+      $('setup').hidden = false;
+    });
+  </script>
+</body>
+</html>
