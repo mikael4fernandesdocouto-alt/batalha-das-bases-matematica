@@ -200,6 +200,11 @@ main { min-height: 100dvh; }
 #difficulty-label { color:var(--gold); }
 .progress-track { height:5px; overflow:hidden; border-radius:5px; background:#0a1a45; }
 #progress-fill { width:6.67%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#ff9d1c,#ffe269); transition:width .4s ease; }
+.set-badge {
+  display:inline-block; margin:9px 0 0 2px; padding:3px 10px; border-radius:999px;
+  border:1px solid rgba(112,151,231,.4); background:rgba(47,125,242,.14);
+  color:#9dc0ff; font-size:.5rem; font-weight:900; letter-spacing:.14em;
+}
 .money-ladder { display:flex; justify-content:space-between; gap:2px; margin:10px 0 14px; }
 .money-ladder span {
   display:grid;
