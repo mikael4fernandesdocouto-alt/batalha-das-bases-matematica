@@ -555,6 +555,8 @@ dialog button { min-height:43px; border:1px solid #395b9d; border-radius:8px; ba
   height:20px;
   border:1px solid rgba(0,0,0,.18);
   opacity:0;
+}
+.correct-celebration.show .answer-confetti i {
   animation:confetti-burst 1.1s cubic-bezier(.12,.65,.3,1) var(--delay) both;
 }
 .answer-confetti i:nth-child(3n) { width:8px; height:8px; }
