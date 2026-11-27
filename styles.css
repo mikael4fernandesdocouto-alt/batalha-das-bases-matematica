@@ -218,14 +218,14 @@ main { min-height: 100dvh; }
   display:grid;
   place-items:center;
   width:100%;
-  max-width:300px;
+  max-width:320px;
   aspect-ratio:1;
   padding:10px;
   border-radius:14px;
   background:#fff;
 }
 .qr-holder svg { display:block; width:100%; height:100%; }
-.qr-url { margin:0; max-width:300px; color:#8fa1c8; font-size:.6rem; line-height:1.4; word-break:break-all; }
+.qr-url { margin:0; max-width:320px; color:#8fa1c8; font-size:.6rem; line-height:1.4; word-break:break-all; }
 .qr-refresh {
   padding:7px 12px;
   border:1px solid #31549b;
@@ -243,10 +243,13 @@ main { min-height: 100dvh; }
 .qr-steps li > span { color:var(--gold); font:900 1.2rem Montserrat; }
 .qr-steps strong { font-size:.85rem; text-transform:uppercase; }
 .qr-steps p { margin:5px 0 0; color:var(--muted); font-size:.75rem; line-height:1.45; }
+/* No desktop a tela de QR ganha largura extra: QR grande à esquerda, passos à direita */
+body.qr-mode { width:min(100%, 960px); }
 @media (min-width:760px) {
-  .qr-layout { grid-template-columns:minmax(300px,400px) 1fr; gap:36px; }
-  .qr-holder { max-width:400px; }
-  .qr-url { max-width:400px; }
+  body.qr-mode .qr-screen { text-align:left; }
+  body.qr-mode .qr-layout { grid-template-columns:minmax(300px,400px) 1fr; gap:36px; align-items:center; }
+  body.qr-mode .qr-holder { max-width:400px; }
+  body.qr-mode .qr-url { max-width:400px; }
 }
 
 .rules-screen h1,.result-screen h1,.win-screen h1,.qr-screen h1 {

@@ -483,6 +483,7 @@ function generateQuestion(slot) {
 
 function showScreen(name) {
   screens.forEach((screen) => $(`${screen}-screen`).hidden = screen !== name);
+  document.body.classList.toggle('qr-mode', name === 'qr');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
