@@ -632,6 +632,8 @@ function celebrateAnswer() {
 
   for (let i = 0; i < 48; i++) {
     const piece = document.createElement('i');
+    piece.style.left = `${random(-185, 185)}px`;
+    piece.style.top = `${random(-125, 125)}px`;
     piece.style.setProperty('--x', `${random(-220, 220)}px`);
     piece.style.setProperty('--y', `${random(-240, 220)}px`);
     piece.style.setProperty('--r', `${random(-540, 540)}deg`);
