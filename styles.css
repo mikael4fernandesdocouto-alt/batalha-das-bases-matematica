@@ -120,7 +120,27 @@ main { min-height: 100dvh; }
   border-radius:15px;
   background:linear-gradient(100deg,rgba(255,174,27,.08),rgba(255,211,72,.16),rgba(255,174,27,.08));
 }
-.candy { font-size:2rem; filter:drop-shadow(0 5px 7px rgba(0,0,0,.4)); }
+.brownie-icon {
+  position:relative;
+  display:block;
+  width:43px;
+  height:34px;
+  border:2px solid #d48945;
+  background:linear-gradient(145deg,#743613,#3b1708);
+  box-shadow:5px 6px 0 #1c0b05, inset 0 4px #9d5327;
+  transform:rotate(-5deg);
+}
+.brownie-icon::before,.brownie-icon::after,.brownie-icon i {
+  content:"";
+  position:absolute;
+  width:5px;
+  height:5px;
+  background:#e3a56b;
+  transform:rotate(20deg);
+}
+.brownie-icon::before { left:8px; top:9px; }
+.brownie-icon::after { right:8px; top:14px; }
+.brownie-icon i { left:21px; top:6px; }
 .prize-capsule div { text-align:left; }
 .prize-capsule small { display:block; color:#b5c0da; font-size:.54rem; letter-spacing:.15em; }
 .prize-capsule strong { color:var(--gold); font:900 1.1rem Montserrat; }
@@ -416,7 +436,31 @@ body.qr-mode { width:min(100%, 960px); }
 .result-screen > p:not(.kicker) { color:var(--muted); }
 .correct-reveal { width:100%; margin:18px 0 13px; padding:15px; border:1px solid #2b4e8f; border-radius:11px; color:#9dafd3; background:#07163b; font-size:.76rem; }
 .correct-reveal strong { color:var(--gold); }
-.giant-candy { margin:10px 0 16px; font-size:6rem; filter:drop-shadow(0 15px 20px rgba(0,0,0,.45)); animation:float 1.4s ease-in-out infinite; }
+.giant-brownie {
+  position:relative;
+  width:118px;
+  height:92px;
+  margin:18px 0 25px;
+  border:4px solid #d58a4c;
+  background:linear-gradient(145deg,#8b431c 0 20%,#55220d 21% 70%,#2e1006);
+  box-shadow:10px 12px 0 #180704, inset 0 9px #a65b2d;
+  animation:float 1.4s ease-in-out infinite;
+  transform:rotate(-3deg);
+}
+.giant-brownie::before,.giant-brownie::after,.giant-brownie i {
+  content:"";
+  position:absolute;
+  width:11px;
+  height:9px;
+  background:#efb276;
+  box-shadow:2px 2px #4b1a0a;
+  transform:rotate(25deg);
+}
+.giant-brownie::before { left:20px; top:25px; }
+.giant-brownie::after { right:18px; top:42px; }
+.giant-brownie i:nth-child(1) { left:55px; top:17px; }
+.giant-brownie i:nth-child(2) { left:43px; bottom:15px; }
+.giant-brownie i:nth-child(3) { right:30px; bottom:12px; }
 @keyframes float { 50% { transform:translateY(-9px) rotate(4deg); } }
 .win-screen h1 { color:var(--gold); text-shadow:0 4px 0 #6b3c00; }
 .win-screen > p:not(.kicker) { color:#d6e1f6; }
@@ -436,6 +480,90 @@ dialog button { min-height:43px; border:1px solid #395b9d; border-radius:8px; ba
 #confirm-quit { border-color:#8f3044; background:#5b1b2d; }
 .toast { position:fixed; left:50%; bottom:20px; z-index:30; max-width:calc(100% - 28px); padding:10px 15px; border-radius:9px; color:#14203c; background:#fff; font-size:.72rem; font-weight:800; opacity:0; pointer-events:none; transform:translate(-50%,20px); transition:.22s; }
 .toast.show { opacity:1; transform:translate(-50%,0); }
+
+/* ---- visual de competição: menos arredondado, mais recortado ---- */
+.prize-capsule,.main-button,.start-form input,.grade-chip,.qr-card,.qr-holder,
+.qr-refresh,.question-card,.answers button,.lifelines button,.confirm-bar button,
+.correct-reveal,.candy-ticket,dialog,dialog button,.toast {
+  border-radius:2px;
+}
+.show-badge,.set-badge { border-radius:2px; }
+.main-button,.grade-chip.selected,.question-card,.answers button,.prize-capsule,.candy-ticket {
+  clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));
+}
+.money-ladder span,.player-chip > span,.result-icon { border-radius:2px; }
+.money-ladder span { font-size:.44rem; }
+.player-chip > span { transform:none; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); }
+.money-ladder span.current { transform:scale(1.18); }
+.answers button.correct { animation:correct-hit .5s cubic-bezier(.2,1.8,.4,1); }
+@keyframes correct-hit {
+  0% { transform:scale(1); }
+  45% { transform:scale(1.04) translateX(4px); box-shadow:0 0 35px rgba(24,199,122,.8); }
+  100% { transform:scale(1); }
+}
+
+/* ---- popup de acerto e explosão de confete ---- */
+.correct-celebration {
+  position:fixed;
+  inset:0;
+  z-index:60;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  pointer-events:none;
+  visibility:hidden;
+  background:radial-gradient(circle,rgba(12,111,75,.3),transparent 48%);
+}
+.correct-celebration.show { visibility:visible; }
+.correct-stamp {
+  position:relative;
+  z-index:2;
+  min-width:245px;
+  padding:22px 28px 19px;
+  border:3px solid #baffdc;
+  color:#052819;
+  background:#38e39e;
+  box-shadow:9px 10px 0 #073e29,0 0 70px rgba(56,227,158,.65);
+  text-align:center;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+  opacity:0;
+  transform:scale(.25) rotate(-8deg);
+}
+.correct-celebration.show .correct-stamp { animation:stamp-pop 1.15s cubic-bezier(.18,1.5,.35,1) both; }
+.correct-stamp span {
+  display:inline-grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  margin-right:9px;
+  border:3px solid #052819;
+  font:900 1.7rem/1 Montserrat;
+  vertical-align:middle;
+}
+.correct-stamp strong { font:900 2rem/.9 Montserrat; letter-spacing:-.05em; vertical-align:middle; }
+.correct-stamp small { display:block; margin-top:10px; font-size:.55rem; font-weight:900; letter-spacing:.22em; }
+@keyframes stamp-pop {
+  0% { opacity:0; transform:scale(.25) rotate(-8deg); }
+  25% { opacity:1; transform:scale(1.12) rotate(2deg); }
+  45%,78% { opacity:1; transform:scale(1) rotate(0); }
+  100% { opacity:0; transform:scale(1.08) translateY(-18px); }
+}
+.answer-confetti { position:absolute; left:50%; top:50%; width:1px; height:1px; }
+.answer-confetti i {
+  position:absolute;
+  width:12px;
+  height:20px;
+  border:1px solid rgba(0,0,0,.18);
+  opacity:0;
+  animation:confetti-burst 1.1s cubic-bezier(.12,.65,.3,1) var(--delay) both;
+}
+.answer-confetti i:nth-child(3n) { width:8px; height:8px; }
+.answer-confetti i:nth-child(4n) { clip-path:polygon(50% 0,100% 100%,0 100%); }
+@keyframes confetti-burst {
+  0% { opacity:1; transform:translate(0,0) rotate(0); }
+  75% { opacity:1; }
+  100% { opacity:0; transform:translate(var(--x),var(--y)) rotate(var(--r)); }
+}
 
 @media (max-height: 720px) {
   .start-screen { justify-content:flex-start; }

@@ -604,6 +604,7 @@ function confirmAnswer() {
   buttons.forEach((button) => button.disabled = true);
   const chosen = currentQuestion.options[selectedIndex];
   buttons[selectedIndex].classList.add(chosen.correct ? 'correct' : 'wrong');
+  if (chosen.correct) celebrateAnswer();
 
   setTimeout(() => {
     if (!chosen.correct) {
@@ -621,6 +622,32 @@ function confirmAnswer() {
       loadQuestion();
     }, 900);
   }, 700);
+}
+
+function celebrateAnswer() {
+  const overlay = $('correct-celebration');
+  const confetti = $('answer-confetti');
+  const colors = ['#ffcc3d', '#ff7a18', '#18c77a', '#2f7df2', '#ffffff'];
+  confetti.textContent = '';
+
+  for (let i = 0; i < 48; i++) {
+    const piece = document.createElement('i');
+    piece.style.setProperty('--x', `${random(-220, 220)}px`);
+    piece.style.setProperty('--y', `${random(-240, 220)}px`);
+    piece.style.setProperty('--r', `${random(-540, 540)}deg`);
+    piece.style.setProperty('--delay', `${Math.random() * .18}s`);
+    piece.style.background = colors[random(0, colors.length - 1)];
+    confetti.appendChild(piece);
+  }
+
+  overlay.classList.remove('show');
+  void overlay.offsetWidth;
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden', 'false');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+  }, 1250);
 }
 
 function useFifty() {
