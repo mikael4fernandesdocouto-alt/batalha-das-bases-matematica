@@ -1,11 +1,12 @@
 'use strict';
 
 const $ = (id) => document.getElementById(id);
-const screens = ['start', 'rules', 'game', 'result', 'win'];
+const screens = ['start', 'rules', 'game', 'result', 'win', 'qr'];
 const letters = ['A', 'B', 'C', 'D'];
 const totalQuestions = 15;
 
 let playerName = '';
+let playerGrade = null;
 let level = 1;
 let currentQuestion = null;
 let selectedIndex = null;
@@ -65,47 +66,89 @@ function question(topic, text, answer, wrong) {
   return { topic, text, options: buildOptions(answer, wrong) };
 }
 
-/* Cada variante devolve a pergunta "crua"; generateQuestion monta as opções. */
+/* Cada gerador devolve a pergunta "crua"; question() monta as alternativas. */
 function q(topic, text, answer, wrong) {
   return { topic, text, answer, wrong };
 }
 
 /* ------------------------------------------------------------------ *
- *  POOL DE VARIANTES — 3 modelos diferentes para cada um dos 15 níveis
+ *  FAMÍLIAS DE PERGUNTAS — 3 modelos por família
  * ------------------------------------------------------------------ */
-const VARIANTS = [
-  /* 1 — AQUECIMENTO */
-  [
+const TOPICS = {
+  /* ---- aritmética básica ---- */
+  soma: [
     () => {
       const a = random(24, 79), b = random(16, 59), answer = a + b;
-      return q('ARITMÉTICA', `Quanto é ${a} + ${b}?`, answer, [answer + 2, answer - 3, answer + 10]);
+      return q('ADIÇÃO', `Quanto é ${a} + ${b}?`, answer, [answer + 2, answer - 3, answer + 10]);
     },
     () => {
-      const a = random(62, 99), b = random(13, 48), answer = a - b;
-      return q('SUBTRAÇÃO', `Quanto é ${a} − ${b}?`, answer, [answer + 1, answer - 2, answer + 10]);
+      const a = random(3, 9), b = random(11, 49), answer = a + b;
+      return q('ADIÇÃO', `Quanto é ${a} + ${b}?`, answer, [answer + 1, answer - 2, answer + 9]);
     },
     () => {
       const a = random(11, 39), b = random(12, 45), c = random(10, 30), answer = a + b + c;
       return q('ADIÇÃO', `Quanto é ${a} + ${b} + ${c}?`, answer, [answer + 5, answer - 4, answer + 11]);
     }
   ],
-  /* 2 — AQUECIMENTO */
-  [
+  sub: [
+    () => {
+      const a = random(62, 99), b = random(13, 48), answer = a - b;
+      return q('SUBTRAÇÃO', `Quanto é ${a} − ${b}?`, answer, [answer + 1, answer - 2, answer + 10]);
+    },
+    () => {
+      const a = random(120, 899), b = random(35, 119), answer = a - b;
+      return q('SUBTRAÇÃO', `Quanto é ${a} − ${b}?`, answer, [answer + 10, answer - 1, answer + 100]);
+    },
+    () => {
+      const a = random(2, 9) * 10, b = random(3, 9), answer = a - b;
+      return q('SUBTRAÇÃO', `Quanto é ${a} − ${b}?`, answer, [answer - 1, answer + 2, answer + 10]);
+    }
+  ],
+  mult: [
     () => {
       const a = random(6, 13), b = random(6, 12), answer = a * b;
       return q('MULTIPLICAÇÃO', `Quanto é ${a} × ${b}?`, answer, [answer + a, answer - b, answer + 10]);
     },
     () => {
-      const b = random(3, 9), answer = random(4, 12), dividend = b * answer;
-      return q('DIVISÃO', `Quanto é ${dividend} ÷ ${b}?`, answer, [answer + 1, answer - 2, answer + 3]);
+      const a = random(11, 49), b = random(3, 9), answer = a * b;
+      return q('MULTIPLICAÇÃO', `Quanto é ${a} × ${b}?`, answer, [answer + b, answer - a, answer + 10]);
     },
     () => {
       const a = random(12, 89), factor = pick([10, 100]), answer = a * factor;
       return q('MULTIPLICAÇÃO', `Quanto é ${a} × ${factor}?`, answer, [answer + factor, answer / 10, answer - factor]);
     }
   ],
-  /* 3 — AQUECIMENTO */
-  [
+  div: [
+    () => {
+      const b = random(3, 9), answer = random(4, 12), dividend = b * answer;
+      return q('DIVISÃO', `Quanto é ${dividend} ÷ ${b}?`, answer, [answer + 1, answer - 2, answer + 3]);
+    },
+    () => {
+      const a = random(2, 9) * 100, factor = pick([10, 100]), answer = a / factor;
+      return q('DIVISÃO', `Quanto é ${a} ÷ ${factor}?`, answer, [answer * 10, answer + 10, answer - 5]);
+    },
+    () => {
+      const answer = random(6, 49), a = answer * 2;
+      return q('DIVISÃO', `Quanto é a metade de ${a}?`, answer, [answer + 2, answer - 3, answer + 10]);
+    }
+  ],
+
+  /* ---- operações e porcentagem ---- */
+  ordem: [
+    () => {
+      const a = random(5, 12), b = random(3, 9), c = random(2, 5), answer = (a + b) * c;
+      return q('ORDEM DAS OPERAÇÕES', `Calcule: (${a} + ${b}) × ${c}`, answer, [a + b * c, answer + c, answer - b]);
+    },
+    () => {
+      const a = random(5, 20), b = random(3, 9), c = random(2, 6), answer = a + b * c;
+      return q('ORDEM DAS OPERAÇÕES', `Calcule: ${a} + ${b} × ${c}`, answer, [(a + b) * c, answer + b, answer - c]);
+    },
+    () => {
+      const a = random(3, 9), b = random(8, 15), c = random(2, 5), answer = a * (b - c);
+      return q('ORDEM DAS OPERAÇÕES', `Calcule: ${a} × (${b} − ${c})`, answer, [a * b - c, answer + a, answer - b]);
+    }
+  ],
+  porc: [
     () => {
       const percent = pick([15, 20, 25, 30]);
       const base = random(4, 12) * 20;
@@ -126,23 +169,9 @@ const VARIANTS = [
       return q('PORCENTAGEM', `${part} é quantos por cento de ${total}?`, `${percent}%`, [`${percent + 10}%`, `${percent + 5}%`, `${Math.max(5, percent - 5)}%`]);
     }
   ],
-  /* 4 — VALENDO */
-  [
-    () => {
-      const a = random(5, 12), b = random(3, 9), c = random(2, 5), answer = (a + b) * c;
-      return q('ORDEM DAS OPERAÇÕES', `Calcule: (${a} + ${b}) × ${c}`, answer, [a + b * c, answer + c, answer - b]);
-    },
-    () => {
-      const a = random(5, 20), b = random(3, 9), c = random(2, 6), answer = a + b * c;
-      return q('ORDEM DAS OPERAÇÕES', `Calcule: ${a} + ${b} × ${c}`, answer, [(a + b) * c, answer + b, answer - c]);
-    },
-    () => {
-      const a = random(3, 9), b = random(8, 15), c = random(2, 5), answer = a * (b - c);
-      return q('ORDEM DAS OPERAÇÕES', `Calcule: ${a} × (${b} − ${c})`, answer, [a * b - c, answer + a, answer - b]);
-    }
-  ],
-  /* 5 — VALENDO */
-  [
+
+  /* ---- equações ---- */
+  eq: [
     () => {
       const x = random(4, 16), a = random(2, 7), b = random(3, 15), result = a * x + b;
       return q('EQUAÇÃO', `Se ${a}x + ${b} = ${result}, quanto vale x?`, x, [x + 2, x - 2, a * x]);
@@ -156,8 +185,9 @@ const VARIANTS = [
       return q('EQUAÇÃO', `Se x/${a} + ${b} = ${result}, quanto vale x?`, x, [result - b, x + a, x - a]);
     }
   ],
-  /* 6 — VALENDO */
-  [
+
+  /* ---- frações ---- */
+  frac: [
     () => {
       const d1 = pick([3, 4, 5, 6]), d2 = pick([4, 5, 6, 8]);
       const n1 = random(1, d1 - 1), n2 = random(1, d2 - 1);
@@ -182,8 +212,9 @@ const VARIANTS = [
       return q('FRAÇÕES', `Quanto é ${numerator}/${denominator} de ${total}?`, answer, [total - answer, answer + numerator, total / denominator]);
     }
   ],
-  /* 7 — DIFÍCIL */
-  [
+
+  /* ---- potências e raízes ---- */
+  pot: [
     () => {
       const base = random(2, 4), a = random(3, 5), b = random(2, 4), answer = base ** (a + b);
       return q('POTÊNCIAS', `Quanto é ${base}^${a} × ${base}^${b}?`, answer, [base ** (a * b), base ** Math.abs(a - b), answer + base]);
@@ -197,8 +228,7 @@ const VARIANTS = [
       return q('POTÊNCIAS', `Quanto é ${base}^${a} ÷ ${base}^${b}?`, answer, [base ** (a + b), base ** a - b, answer + base]);
     }
   ],
-  /* 8 — DIFÍCIL */
-  [
+  rad: [
     () => {
       const root = random(11, 19), cube = random(2, 5), answer = root + cube;
       return q('RADICIAÇÃO', `Quanto é √${root ** 2} + ∛${cube ** 3}?`, answer, [root * cube, answer - 2, answer + 3]);
@@ -212,8 +242,9 @@ const VARIANTS = [
       return q('RADICIAÇÃO', `Quanto é √${n ** 2} × √${m ** 2}?`, answer, [n + m, answer + n, n ** 2 + m]);
     }
   ],
-  /* 9 — DIFÍCIL */
-  [
+
+  /* ---- geometria ---- */
+  pita: [
     () => {
       const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]]);
       return q('TEOREMA DE PITÁGORAS', `Um triângulo retângulo tem catetos ${a} e ${b}. Qual é a hipotenusa?`, c, [a + b, c - 2, Math.abs(b - a)]);
@@ -227,8 +258,23 @@ const VARIANTS = [
       return q('TEOREMA DE PITÁGORAS', `Um triângulo retângulo tem catetos ${a * k} e ${b * k}. Qual é a hipotenusa?`, c * k, [a * k + b * k, c * k - 2, c * k + 3]);
     }
   ],
-  /* 10 — MUITO DIFÍCIL */
-  [
+  geo: [
+    () => {
+      const n = random(16, 25), answer = n * (n - 3) / 2;
+      return q('GEOMETRIA COMBINATÓRIA', `Quantas diagonais possui um polígono de ${n} lados?`, answer, [n * (n - 1) / 2, n * (n - 2) / 2, answer - n]);
+    },
+    () => {
+      const n = random(6, 15), answer = (n - 2) * 180;
+      return q('GEOMETRIA', `Qual é a soma dos ângulos internos de um polígono de ${n} lados?`, answer, [(n - 1) * 180, n * 180, (n - 2) * 90]);
+    },
+    () => {
+      const n = random(8, 14), answer = n - 3;
+      return q('GEOMETRIA', `Quantas diagonais partem de um único vértice de um polígono de ${n} lados?`, answer, [n, n - 2, n - 1]);
+    }
+  ],
+
+  /* ---- sequências, contagem e probabilidade ---- */
+  pa: [
     () => {
       const first = random(2, 9), ratio = random(3, 8), position = random(18, 30);
       const answer = first + (position - 1) * ratio;
@@ -245,8 +291,7 @@ const VARIANTS = [
       return q('PROGRESSÃO ARITMÉTICA', `Numa P.A., a₁ = ${first} e a${n} = ${term}. Qual é a razão r?`, ratio, [ratio + 1, ratio - 1, term - first]);
     }
   ],
-  /* 11 — MUITO DIFÍCIL */
-  [
+  comb: [
     () => {
       const n = random(8, 14), answer = n * (n - 1) / 2;
       return q('COMBINATÓRIA', `De quantas formas podemos escolher 2 pessoas entre ${n}?`, answer, [n * 2, n ** 2, (n - 1) * 2]);
@@ -260,8 +305,7 @@ const VARIANTS = [
       return q('COMBINATÓRIA', `Uma senha tem ${a} opções no 1º dígito, ${b} no 2º e ${c} no 3º. Quantas senhas diferentes existem?`, answer, [a + b + c, a * b, answer + c]);
     }
   ],
-  /* 12 — MUITO DIFÍCIL */
-  [
+  prob: [
     () => {
       const target = pick([5, 6, 8, 9]);
       const combos = [0, 0, 1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1][target];
@@ -274,8 +318,9 @@ const VARIANTS = [
     },
     () => q('PROBABILIDADE', 'Três moedas justas são lançadas. Qual a chance de sair exatamente 2 caras?', '3/8', ['1/3', '2/3', '1/2'])
   ],
-  /* 13 — ABSURDO */
-  [
+
+  /* ---- álgebra avançada (só professor) ---- */
+  alg: [
     () => {
       const roots = shuffle([2, 3, 4, 5, 6, 7]).slice(0, 3);
       const sum = roots.reduce((a, b) => a + b, 0);
@@ -295,28 +340,14 @@ const VARIANTS = [
       return q('ÁLGEBRA AVANÇADA', `Qual é a soma das raízes de x² − ${sum}x + ${product} = 0?`, sum, [product, -sum, sum + product]);
     }
   ],
-  /* 14 — ABSURDO */
-  [
-    () => {
-      const n = random(16, 25), answer = n * (n - 3) / 2;
-      return q('GEOMETRIA COMBINATÓRIA', `Quantas diagonais possui um polígono de ${n} lados?`, answer, [n * (n - 1) / 2, n * (n - 2) / 2, answer - n]);
-    },
-    () => {
-      const n = random(6, 15), answer = (n - 2) * 180;
-      return q('GEOMETRIA', `Qual é a soma dos ângulos internos de um polígono de ${n} lados?`, answer, [(n - 1) * 180, n * 180, (n - 2) * 90]);
-    },
-    () => {
-      const n = random(8, 14), answer = n - 3;
-      return q('GEOMETRIA', `Quantas diagonais partem de um único vértice de um polígono de ${n} lados?`, answer, [n, n - 2, n - 1]);
-    }
-  ],
-  /* 15 — QUASE IMPOSSÍVEL (bancos temáticos) */
-  [
+
+  /* ---- rodada final (só professor) ---- */
+  final: [
     () => finalFrom('complexos'),
     () => finalFrom('algebra'),
     () => finalFrom('geometria')
   ]
-];
+};
 
 const FINAL_POOLS = {
   complexos: [
@@ -350,6 +381,52 @@ function finalFrom(bank) {
 }
 
 /* ------------------------------------------------------------------ *
+ *  TRILHAS POR TURMA — 15 casas, da mais fácil para a mais difícil
+ * ------------------------------------------------------------------ */
+const GRADES = {
+  '6': {
+    label: '6º ANO',
+    bonus: 10,
+    trilha: ['soma', 'sub', 'mult', 'div', 'soma', 'mult', 'ordem', 'porc', 'ordem', 'frac', 'porc', 'frac', 'ordem', 'porc', 'frac']
+  },
+  '7': {
+    label: '7º ANO',
+    bonus: 8,
+    trilha: ['soma', 'sub', 'mult', 'div', 'ordem', 'porc', 'frac', 'eq', 'ordem', 'frac', 'porc', 'eq', 'frac', 'eq', 'porc']
+  },
+  '8': {
+    label: '8º ANO',
+    bonus: 6,
+    trilha: ['mult', 'div', 'ordem', 'porc', 'frac', 'eq', 'eq', 'pot', 'frac', 'rad', 'eq', 'pot', 'porc', 'rad', 'pot']
+  },
+  '9': {
+    label: '9º ANO',
+    bonus: 4,
+    trilha: ['ordem', 'porc', 'frac', 'eq', 'pot', 'rad', 'pita', 'eq', 'pot', 'pita', 'rad', 'pa', 'pita', 'pa', 'rad']
+  },
+  '1': {
+    label: '1º ANO EM',
+    bonus: 2,
+    trilha: ['porc', 'frac', 'eq', 'pot', 'rad', 'pita', 'pa', 'pot', 'pita', 'pa', 'comb', 'prob', 'pa', 'comb', 'prob']
+  },
+  '2': {
+    label: '2º ANO EM',
+    bonus: 0,
+    trilha: ['eq', 'frac', 'pot', 'rad', 'pita', 'pa', 'comb', 'prob', 'pa', 'comb', 'prob', 'geo', 'geo', 'comb', 'prob']
+  },
+  '3': {
+    label: '3º ANO EM',
+    bonus: 0,
+    trilha: ['pot', 'rad', 'pita', 'pa', 'comb', 'prob', 'pa', 'comb', 'prob', 'geo', 'geo', 'prob', 'comb', 'geo', 'prob']
+  },
+  prof: {
+    label: 'PROFESSOR',
+    bonus: 0,
+    trilha: ['soma', 'mult', 'porc', 'ordem', 'eq', 'frac', 'pot', 'rad', 'pita', 'pa', 'comb', 'prob', 'alg', 'geo', 'final']
+  }
+};
+
+/* ------------------------------------------------------------------ *
  *  CONJUNTOS — cada rodada sorteia uma combinação de variantes
  * ------------------------------------------------------------------ */
 const SETS = [
@@ -375,29 +452,33 @@ function pickSet() {
   try {
     localStorage.setItem(SET_STORAGE_KEY, chosen.id);
   } catch (error) {
-    /* localStorage bloqueado: sorteio continua funcionando sem memória */
+    /* localStorage bloqueado: o sorteio continua funcionando sem memória */
   }
   return chosen;
 }
 
-function pickVariantIndex(stage, avoid) {
-  const pool = VARIANTS[stage - 1];
+function topicAt(slot) {
+  return GRADES[playerGrade].trilha[slot - 1];
+}
+
+function pickVariantIndex(slot, avoid) {
+  const pool = TOPICS[topicAt(slot)];
   if (pool.length < 2) return 0;
   let index = random(0, pool.length - 1);
   while (index === avoid) index = random(0, pool.length - 1);
   return index;
 }
 
-function buildQuestion(stage, variantIndex) {
-  const pool = VARIANTS[stage - 1];
+function buildQuestion(slot, variantIndex) {
+  const pool = TOPICS[topicAt(slot)];
   const variant = pool[Math.min(variantIndex, pool.length - 1)];
   const raw = variant();
   return question(raw.topic, raw.text, raw.answer, raw.wrong);
 }
 
-function generateQuestion(stage) {
+function generateQuestion(slot) {
   const set = activeSet || SETS[0];
-  return buildQuestion(stage, set.picks[stage - 1]);
+  return buildQuestion(slot, set.picks[slot - 1]);
 }
 
 function showScreen(name) {
@@ -413,12 +494,15 @@ function showToast(text) {
 }
 
 function getTimeLimit(stage) {
-  if (stage <= 3) return 30;
-  if (stage <= 6) return 24;
-  if (stage <= 9) return 18;
-  if (stage <= 12) return 13;
-  if (stage <= 14) return 10;
-  return 8;
+  let base;
+  if (stage <= 3) base = 30;
+  else if (stage <= 6) base = 24;
+  else if (stage <= 9) base = 18;
+  else if (stage <= 12) base = 13;
+  else if (stage <= 14) base = 10;
+  else base = 8;
+  const bonus = playerGrade && GRADES[playerGrade] ? GRADES[playerGrade].bonus : 0;
+  return Math.min(45, base + bonus);
 }
 
 function getDifficulty(stage) {
@@ -441,10 +525,10 @@ function startGame() {
   $('skip-button').classList.remove('used');
   $('player-display').textContent = playerName;
   $('player-initial').textContent = playerName.charAt(0).toUpperCase();
-  if ($('set-label')) $('set-label').textContent = activeSet.label;
+  $('set-label').textContent = `${GRADES[playerGrade].label} · ${activeSet.label}`;
   showScreen('game');
   loadQuestion();
-  showToast(`${activeSet.label} sorteado`);
+  showToast(`${GRADES[playerGrade].label} · ${activeSet.label}`);
 }
 
 function loadQuestion(forceNewVariant) {
@@ -604,12 +688,72 @@ function goHome() {
   showScreen('start');
 }
 
+/* ------------------------------------------------------------------ *
+ *  TELA DE QR CODE
+ * ------------------------------------------------------------------ */
+function gameUrl() {
+  return location.origin + location.pathname;
+}
+
+function renderQr() {
+  const holder = $('qr-holder');
+  const url = gameUrl();
+  $('qr-url').textContent = url;
+  holder.textContent = '';
+
+  if (!/^https?:$/.test(location.protocol)) {
+    const warning = document.createElement('p');
+    warning.className = 'qr-warning';
+    warning.textContent = 'Abra o jogo pelo endereço publicado (https) para gerar o QR Code.';
+    holder.appendChild(warning);
+    return;
+  }
+
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  holder.innerHTML = qr.createSvgTag({
+    cellSize: 8,
+    margin: 2,
+    scalable: true,
+    alt: 'QR Code para abrir o jogo no celular'
+  });
+}
+
+function showQr() {
+  renderQr();
+  showScreen('qr');
+}
+
+/* ------------------------------------------------------------------ *
+ *  SELEÇÃO DE TURMA
+ * ------------------------------------------------------------------ */
+function selectGrade(key) {
+  playerGrade = key;
+  document.querySelectorAll('.grade-chip').forEach((chip) => {
+    const on = chip.dataset.grade === key;
+    chip.classList.toggle('selected', on);
+    chip.setAttribute('aria-checked', String(on));
+  });
+}
+
 $('start-form').addEventListener('submit', (event) => {
   event.preventDefault();
+  if (!playerGrade) {
+    showToast('Escolha sua turma primeiro.');
+    document.querySelector('.grade-grid').classList.add('shake');
+    setTimeout(() => document.querySelector('.grade-grid').classList.remove('shake'), 500);
+    return;
+  }
   playerName = $('player-name').value.trim().slice(0, 18) || 'Participante';
   startGame();
 });
+document.querySelectorAll('.grade-chip').forEach((chip) => {
+  chip.addEventListener('click', () => selectGrade(chip.dataset.grade));
+});
 $('rules-button').addEventListener('click', () => showScreen('rules'));
+$('qr-button').addEventListener('click', showQr);
+$('qr-refresh').addEventListener('click', renderQr);
 document.querySelectorAll('[data-home]').forEach((button) => button.addEventListener('click', goHome));
 document.querySelectorAll('[data-answer]').forEach((button) => button.addEventListener('click', () => selectAnswer(Number(button.dataset.answer))));
 $('confirm-button').addEventListener('click', confirmAnswer);
@@ -622,5 +766,5 @@ $('again-button').addEventListener('click', startGame);
 $('win-again-button').addEventListener('click', startGame);
 
 if (typeof module !== 'undefined') {
-  module.exports = { generateQuestion, getTimeLimit, gcd, VARIANTS, SETS, FINAL_POOLS };
+  module.exports = { generateQuestion, getTimeLimit, gcd, TOPICS, SETS, GRADES, FINAL_POOLS, buildQuestion };
 }

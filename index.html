@@ -28,9 +28,27 @@
       <form id="start-form" class="start-form">
         <label for="player-name">NOME DO PARTICIPANTE</label>
         <input id="player-name" maxlength="18" placeholder="Digite seu nome" autocomplete="name" required>
+
+        <fieldset class="grade-field">
+          <legend>SELECIONE SUA TURMA</legend>
+          <div class="grade-grid" role="radiogroup" aria-label="Turma">
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="6">6º ano</button>
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="7">7º ano</button>
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="8">8º ano</button>
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="9">9º ano</button>
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="1">1º EM</button>
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="2">2º EM</button>
+            <button type="button" class="grade-chip" role="radio" aria-checked="false" data-grade="3">3º EM</button>
+            <button type="button" class="grade-chip grade-chip--teacher" role="radio" aria-checked="false" data-grade="prof">PROFESSOR</button>
+          </div>
+        </fieldset>
+
         <button class="main-button" type="submit">ENTRAR NO JOGO <span>▶</span></button>
       </form>
-      <button id="rules-button" class="text-button" type="button">Como funciona?</button>
+      <div class="start-actions">
+        <button id="rules-button" class="text-button" type="button">Como funciona?</button>
+        <button id="qr-button" class="text-button" type="button">📱 Jogar no celular</button>
+      </div>
     </section>
 
     <section id="rules-screen" class="screen rules-screen" hidden>
@@ -38,13 +56,31 @@
       <p class="kicker">AS REGRAS</p>
       <h1>Só os melhores<br>chegam ao final.</h1>
       <ol class="rules-list">
-        <li><span>01</span><div><strong>15 perguntas</strong><p>A dificuldade e a pressão aumentam a cada resposta.</p></div></li>
+        <li><span>01</span><div><strong>15 perguntas</strong><p>A dificuldade acompanha a sua turma e aumenta a cada resposta.</p></div></li>
         <li><span>02</span><div><strong>Tempo limitado</strong><p>Você começa com 30 segundos. No final, terá apenas 8.</p></div></li>
         <li><span>03</span><div><strong>Errou, acabou</strong><p>Não existe segunda chance depois de confirmar.</p></div></li>
         <li><span>04</span><div><strong>Duas ajudas</strong><p>Use uma vez o 50/50 e uma vez o pulo. Depois é com você.</p></div></li>
         <li><span>05</span><div><strong>Conjunto sorteado</strong><p>Cada rodada sorteia um conjunto diferente de perguntas. Jogar de novo nunca é a mesma prova.</p></div></li>
       </ol>
       <button class="main-button" data-home type="button">ESTOU PRONTO</button>
+    </section>
+
+    <section id="qr-screen" class="screen qr-screen" hidden>
+      <button class="back-button" data-home type="button">← VOLTAR</button>
+      <p class="kicker">JOGAR NO CELULAR</p>
+      <h1>Escaneie<br>e jogue.</h1>
+      <div class="qr-layout">
+        <div class="qr-card">
+          <div id="qr-holder" class="qr-holder"></div>
+          <p id="qr-url" class="qr-url">—</p>
+          <button id="qr-refresh" class="qr-refresh" type="button">GERAR NOVAMENTE</button>
+        </div>
+        <ol class="qr-steps">
+          <li><span>01</span><div><strong>Abra a câmera</strong><p>Aponte a câmera do celular para o código.</p></div></li>
+          <li><span>02</span><div><strong>Toque no link</strong><p>O jogo abre direto no navegador do aparelho.</p></div></li>
+          <li><span>03</span><div><strong>Escolha sua turma</strong><p>Cada aluno joga no próprio celular.</p></div></li>
+        </ol>
+      </div>
     </section>
 
     <section id="game-screen" class="screen game-screen" hidden>
@@ -128,6 +164,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="qrcode.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
